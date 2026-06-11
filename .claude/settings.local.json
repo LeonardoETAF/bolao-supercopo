@@ -228,7 +228,10 @@
       "Bash(curl -s http://localhost:3000/admin)",
       "Bash(curl -s -o /dev/null -w '%{http_code}\\\\n' --max-time 3 http://localhost:3000/)",
       "Bash(awk '/<div class=\"admin__card cupons-painel\"/,/<div class=\"admin-cupons\" id=\"lista-cupons\">/' crates/frontend/templates/admin.html)",
-      "Bash(pip install *)"
+      "Bash(pip install *)",
+      "Bash(curl -s -o /dev/null -w 'GET /admin -> %{http_code}\\\\n' --max-time 4 http://localhost:3000/admin)",
+      "Bash(command -v lsof)",
+      "Bash(xargs -r kill -9)"
     ],
     "additionalDirectories": [
       "/tmp"
