@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+{% block title %}Painel Admin{% endblock %}
+{% block body %}
+
+<header class="header is-scrolled">
+    <div class="container header__inner">
+        <a href="/" class="header__logo"><img src="/static/img/logo.png" alt="Super Copo"> <span class="header__tag">Admin</span></a>
+        <nav class="header__nav">
+            <a href="/">Site</a>
+            <a href="/ranking">Ranking</a>
+            <button type="button" class="admin-sair" id="btn-logout" hidden>Sair</button>
+        </nav>
+    </div>
+</header>
+
+<section class="admin">
+    <div class="container">
+
+        <!-- LOGIN -->
+        <div class="admin__login admin__card" id="admin-login">
+            <h2>Acesso Administrativo</h2>
+            <form id="form-login" class="form">
+                <div class="form__grupo">
+                    <label>Usuário</label>
+                    <input type="text" name="usuario" required>
+                </div>
+                <div class="form__grupo">
+                    <label>Senha</label>
+                    <input type="password" name="senha" required>
+                </div>
+                <button type="submit" class="btn btn--primario btn--grande">Entrar</button>
+                <span class="form__erro" id="erro-login"></span>
+            </form>
+        </div>
+
+        <!-- PAINEL (após login) -->
+        <div id="admin-painel" hidden>
+
+            <!-- ================= JOGOS (cadastro + gestão) ================= -->
+            <div class="admin__card" id="card-jogos">
+                <h2>Jogos</h2>
+                <p class="admin__hint">Cadastre e gerencie os jogos. O resultado é informado no card <strong>Resultado Oficial</strong>.</p>
+
+                <!-- Cadastro de jogo -->
+                <form id="form-jogo" class="jogo-cadastro">
+                    <div class="jogo-cadastro__times">
+                        <div class="cfg-time">
+                            <span class="cfg-label cfg-label--verde">Time 1 (Mandante)</span>
+                            <input type="text" name="time_a" placeholder="Nome do time" required>
+                            <div class="jogo-flag-pick">
+                                <span class="cfg-flag" id="cad-flag-a"><img src="/static/img/Flag_of_Brazil.svg" alt=""></span>
+                                <select name="bandeira_a" data-flagprev="cad-flag-a"></select>
+                            </div>
+                        </div>
+                        <span class="cfg-vs">VS</span>
+                        <div class="cfg-time">
+                            <span class="cfg-label cfg-label--vermelho">Time 2 (Visitante)</span>
+                            <input type="text" name="time_b" placeholder="Nome do time" required>
+                            <div class="jogo-flag-pick">
+                                <span class="cfg-flag" id="cad-flag-b"><img src="/static/img/Flag_of_Morocco.svg" alt=""></span>
+                                <select name="bandeira_b" data-flagprev="cad-flag-b"></select>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cfg-grid2">
+                        <label class="cfg-field">
+                            <span class="cfg-label">Data do jogo</span>
+                            <input type="date" name="data" required>
+                        </label>
+                        <label class="cfg-field">
+                            <span class="cfg-label">Horário do jogo</span>
+                            <input type="time" name="hora" required>
+                        </label>
+                    </div>
+                    <button type="submit" class="btn btn--primario">Cadastrar Jogo</button>
+                    <span class="form__erro" id="erro-jogo"></span>
+                </form>
+
+                <!-- Lista de jogos -->
+                <div class="admin-jogos" id="lista-jogos"></div>
+            </div>
+
+            <!-- ================= CONFIGURAÇÃO DA LANDING ================= -->
+            <div id="landing-config">
+                <div class="cfg-sec-head">
+                    <h2 class="cfg-card__titulo">Configuração da Landing</h2>
+                    <button type="button" class="btn btn--primario cfg-salvar" id="btn-salvar-landing">Salvar Alterações</button>
+                </div>
+
+                <!-- CONFRONTO -->
+                <section class="cfg-card">
+                    <h2 class="cfg-card__titulo">Confronto</h2>
+                    <label class="cfg-field cfg-jogo-atual">
+                        <span class="cfg-label cfg-label--verde">Jogo atual</span>
+                        <select id="jogo-atual" name="jogo_atual"></select>
+                    </label>
+                    <div class="cfg-confronto">
+                        <div class="cfg-time">
+                            <span class="cfg-label cfg-label--verde">Time 1 (Mandante)</span>
+                            <div class="cfg-time__row">
+                                <span class="cfg-flag" id="flag-time1"><img src="/static/img/Flag_of_Brazil.svg" alt=""></span>
+                                <input type="text" name="time1_nome" placeholder="Time 1" readonly>
+                            </div>
+                        </div>
+                        <span class="cfg-vs">VS</span>
+                        <div class="cfg-time">
+                            <span class="cfg-label cfg-label--vermelho">Time 2 (Visitante)</span>
+                            <div class="cfg-time__row">
+                                <span class="cfg-flag" id="flag-time2"><img src="/static/img/Flag_of_Morocco.svg" alt=""></span>
+                                <input type="text" name="time2_nome" placeholder="Time 2" readonly>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="cfg-grid2">
+                        <label class="cfg-field">
+                            <span class="cfg-label">Data</span>
+                            <input type="text" name="data" placeholder="DD/MM/AAAA" readonly>
+                        </label>
+                        <label class="cfg-field">
+                            <span class="cfg-label">Horário</span>
+                            <input type="text" name="horario" placeholder="00h00" readonly>
+                        </label>
+                    </div>
+                </section>
+
+                <div class="cfg-grid2 cfg-grid2--top">
+                    <!-- RESULTADO OFICIAL -->
+                    <section class="cfg-card">
+                        <h2 class="cfg-card__titulo">Resultado Oficial</h2>
+                        <p class="cfg-card__sub">Placar final do <strong>jogo atual</strong>. Ao divulgar, apura os acertos do ranking e gera os cupons de acerto do placar.</p>
+                        <div class="cfg-placar">
+                            <span class="cfg-flag cfg-flag--lg" id="flag-res1"><img src="/static/img/Flag_of_Brazil.svg" alt=""></span>
+                            <input type="number" name="placar_time1" min="0" max="20" placeholder="0" class="cfg-placar__in">
+                            <span class="cfg-vs cfg-vs--sm">VS</span>
+                            <input type="number" name="placar_time2" min="0" max="20" placeholder="0" class="cfg-placar__in cfg-placar__in--vermelho">
+                            <span class="cfg-flag cfg-flag--lg" id="flag-res2"><img src="/static/img/Flag_of_Morocco.svg" alt=""></span>
+                        </div>
+                        <button type="button" class="btn btn--primario cfg-divulgar" id="btn-divulgar-resultado">Divulgar Resultado</button>
+                        <p class="cfg-card__sub" id="status-resultado"></p>
+                    </section>
+
+                    <!-- CUPONS -->
+                    <section class="cfg-card">
+                        <h2 class="cfg-card__titulo">Cupons</h2>
+                        <p class="cfg-card__sub">O código de cada cupom é gerado automaticamente, único e individual. Quem crava o placar tem o cupom de participação substituído pelo de acerto.</p>
+
+                        <div class="cfg-cupom cfg-cupom--verde">
+                            <span class="cfg-cupom__head"><span class="cfg-dot cfg-dot--verde"></span> Cupom de Participação</span>
+                            <label class="cfg-field">
+                                <span class="cfg-label cfg-label--verde">Desconto</span>
+                                <div class="cfg-pct cfg-pct--verde">
+                                    <input type="number" name="cupom_participacao_desconto" min="0" max="100" placeholder="10">
+                                    <span>%</span>
+                                </div>
+                            </label>
+                        </div>
+
+                        <div class="cfg-cupom cfg-cupom--ouro">
+                            <span class="cfg-cupom__head"><span class="cfg-dot cfg-dot--ouro"></span> Cupom de Acerto do Placar</span>
+                            <label class="cfg-field">
+                                <span class="cfg-label cfg-label--ouro">Desconto</span>
+                                <div class="cfg-pct cfg-pct--ouro">
+                                    <input type="number" name="cupom_acerto_desconto" min="0" max="100" placeholder="30">
+                                    <span>%</span>
+                                </div>
+                            </label>
+                        </div>
+                    </section>
+                </div>
+
+                <span class="form__erro" id="erro-salvar-landing"></span>
+            </div>
+
+            <!-- Métricas -->
+            <h2>Métricas</h2>
+            <div class="admin-metricas" id="metricas"></div>
+
+            <!-- Leads -->
+            <div class="admin__card cupons-painel">
+                <div class="cupons-head">
+                    <h2>Leads</h2>
+                    <button type="button" class="cupons-reload" id="btn-recarregar-leads" title="Recarregar leads" aria-label="Recarregar leads">
+                        <svg viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                            <path d="M21 12a9 9 0 1 1-2.64-6.36"/>
+                            <polyline points="21 3 21 9 15 9"/>
+                        </svg>
+                    </button>
+                </div>
+                <div class="cupons-toolbar">
+                    <div class="cupons-busca">
+                        <svg class="cupons-busca__icon" viewBox="0 0 24 24" width="18" height="18" aria-hidden="true">
+                            <path fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                  d="M11 4a7 7 0 1 0 0 14 7 7 0 0 0 0-14zm9 16-4.35-4.35"/>
+                        </svg>
+                        <input type="text" id="busca-cupons" placeholder="Buscar por código ou tipo…" autocomplete="off">
+                    </div>
+                    <div class="cupons-chips" id="filtro-cupons">
+                        <button type="button" class="cupom-chip is-ativo" data-filtro="">Todos</button>
+                        <button type="button" class="cupom-chip" data-filtro="disponiveis">Disponíveis</button>
+                        <button type="button" class="cupom-chip" data-filtro="utilizados">Utilizados</button>
+                    </div>
+                </div>
+                <div class="admin-cupons" id="lista-cupons"></div>
+            </div>
+
+            <!-- ================= REDES SOCIAIS (último card) ================= -->
+            <div class="admin__card">
+                <h2>Redes Sociais</h2>
+                <p class="admin__hint">Ative e cole o link de cada rede. Elas aparecem no rodapé do site; o WhatsApp também aparece no modal de confirmação do palpite. Salve pelo botão <strong>Salvar Alterações</strong>.</p>
+                <div class="cfg-redes">
+                    <div class="cfg-rede">
+                        <label class="cfg-switch">
+                            <input type="checkbox" data-rede-ativo="instagram">
+                            <span class="cfg-switch__slider"></span>
+                        </label>
+                        <span class="cfg-rede__nome">Instagram</span>
+                        <input type="url" data-rede-url="instagram" placeholder="https://instagram.com/...">
+                    </div>
+                    <div class="cfg-rede">
+                        <label class="cfg-switch">
+                            <input type="checkbox" data-rede-ativo="facebook">
+                            <span class="cfg-switch__slider"></span>
+                        </label>
+                        <span class="cfg-rede__nome">Facebook</span>
+                        <input type="url" data-rede-url="facebook" placeholder="https://facebook.com/...">
+                    </div>
+                    <div class="cfg-rede">
+                        <label class="cfg-switch">
+                            <input type="checkbox" data-rede-ativo="tiktok">
+                            <span class="cfg-switch__slider"></span>
+                        </label>
+                        <span class="cfg-rede__nome">TikTok</span>
+                        <input type="url" data-rede-url="tiktok" placeholder="https://tiktok.com/@...">
+                    </div>
+                    <div class="cfg-rede">
+                        <label class="cfg-switch">
+                            <input type="checkbox" data-rede-ativo="whatsapp">
+                            <span class="cfg-switch__slider"></span>
+                        </label>
+                        <span class="cfg-rede__nome">WhatsApp</span>
+                        <input type="url" data-rede-url="whatsapp" placeholder="https://wa.me/55...">
+                    </div>
+                    <div class="cfg-rede">
+                        <label class="cfg-switch">
+                            <input type="checkbox" data-rede-ativo="youtube">
+                            <span class="cfg-switch__slider"></span>
+                        </label>
+                        <span class="cfg-rede__nome">YouTube</span>
+                        <input type="url" data-rede-url="youtube" placeholder="https://youtube.com/@...">
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/admin.js?v=3">
+{% endblock %}

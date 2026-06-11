@@ -1,0 +1,35 @@
+[workspace]
+members = ["crates/server", "crates/frontend"]
+resolver = "2"
+
+[workspace.dependencies]
+tokio = { version = "1", features = ["full"] }
+axum = { version = "0.7" }
+sqlx = { version = "0.7", features = [
+    "postgres",
+    "runtime-tokio-rustls",
+    "uuid",
+    "chrono",
+    "macros",
+    "migrate",
+] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uuid = { version = "1", features = ["v4", "serde"] }
+chrono = { version = "0.4", features = ["serde"] }
+jsonwebtoken = "9"
+rand = "0.8"
+askama = "0.12"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+dotenvy = "0.15"
+anyhow = "1"
+thiserror = "1"
+tower = "0.4"
+tower-http = { version = "0.5", features = ["fs", "cors", "trace", "set-header"] }
+futures = "0.3"
+tokio-stream = { version = "0.1", features = ["sync"] }
+
+[profile.release]
+opt-level = 3
+lto = "thin"

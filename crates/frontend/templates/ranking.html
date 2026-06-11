@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block title %}Ranking{% endblock %}
+{% block body %}
+
+<header class="header is-scrolled">
+    <div class="container header__inner">
+        <a href="/" class="header__logo"><img src="/static/img/logo.png" alt="Super Copo"></a>
+        <nav class="header__nav">
+            <a href="/#palpite">Fazer Palpite</a>
+        </nav>
+    </div>
+</header>
+
+<section class="ranking-parcial ranking-pagina">
+    <div class="container">
+        <div class="ranking-busca">
+            <input type="text" id="ranking-busca-input" class="ranking-busca__input"
+                   placeholder="Pesquisar por nome, telefone ou e-mail…" autocomplete="off">
+        </div>
+        <div class="ranking-box" id="ranking-tabela-completa"></div>
+        <div class="paginacao" id="paginacao"></div>
+        <a href="/" class="btn btn--secundario">Voltar ao Início</a>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 Super Copo. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/ranking-sse.js"></script>
+{% endblock %}

@@ -1,0 +1,259 @@
+{% extends "base.html" %}
+{% block title %}Bolão Super Copo{% endblock %}
+{% block body %}
+
+<!-- HEADER -->
+<header class="header" id="site-header">
+    <div class="container header__inner">
+        <a href="/" class="header__logo"><img src="/static/img/logo.png" alt="Super Copo"></a>
+        <nav class="header__nav">
+            <span class="header__links" id="header-links">
+                <a href="#como-funciona">Como Funciona</a>
+                <a href="#ranking">Ranking</a>
+            </span>
+            <button type="button" class="header__participar" id="header-participar">Participar</button>
+        </nav>
+    </div>
+</header>
+
+<!-- HERO -->
+<section class="hero hero--promo" id="topo">
+    <div class="container hero-promo">
+    {% if encerrado %}
+        <img class="hero-promo__taca" src="/static/img/taca.png" alt="Troféu">
+        <span class="hero-promo__badge">Bolão Encerrado</span>
+        <h1 class="hero-promo__titulo">Confira o <span class="hero-promo__ouro">pódio</span></h1>
+        {% if podio.len() > 0 %}
+        <ol class="podio podio--hero">
+            {% for p in podio %}
+            <li class="podio__lugar podio__lugar--{{ p.posicao }}">
+                <span class="podio__pos">{{ p.posicao }}º</span>
+                <span class="podio__nome">{{ p.nome }}</span>
+                <span class="podio__pts">{{ p.total_pontos }} pts</span>
+            </li>
+            {% endfor %}
+        </ol>
+        {% endif %}
+        <a href="/ranking" class="btn hero-promo__cta">Ver Ranking</a>
+    {% else %}{% if let Some(j) = destaque %}
+        <img class="hero-promo__taca" src="/static/img/taca.png" alt="Troféu">
+        <span class="hero-promo__badge">Copa 2026</span>
+        <h1 class="hero-promo__titulo">O melhor palpiteiro <span class="hero-promo__ouro">leva a taça</span></h1>
+        <div class="hero-promo__match">
+            <div class="hero-promo__time">
+                {% if let Some(b) = j.bandeira_a %}<img class="hero-promo__flag" src="{{ b }}" alt="{{ j.time_a }}">{% else %}<span class="hero-promo__flag hero-promo__flag--ph">⚽</span>{% endif %}
+                <span class="hero-promo__nome">{{ j.time_a }}</span>
+            </div>
+            <span class="hero-promo__vs">VS</span>
+            <div class="hero-promo__time">
+                {% if let Some(b) = j.bandeira_b %}<img class="hero-promo__flag" src="{{ b }}" alt="{{ j.time_b }}">{% else %}<span class="hero-promo__flag hero-promo__flag--ph">⚽</span>{% endif %}
+                <span class="hero-promo__nome">{{ j.time_b }}</span>
+            </div>
+        </div>
+        <div class="hero-countdown" id="countdown" data-target="{{ j.data_jogo_iso }}">
+            <span class="hero-countdown__label">Palpites encerram em</span>
+            <div class="hero-countdown__clock">
+                <span class="cd-bloco"><b id="cd-d">00</b><i>dias</i></span>
+                <span class="cd-bloco"><b id="cd-h">00</b><i>horas</i></span>
+                <span class="cd-bloco"><b id="cd-m">00</b><i>min</i></span>
+                <span class="cd-bloco"><b id="cd-s">00</b><i>seg</i></span>
+            </div>
+        </div>
+        <button type="button" class="btn hero-promo__cta" id="abrir-palpite">Participar</button>
+        <p class="hero-promo__cupom"><img class="hero-promo__cupom-ic" src="/static/img/cupom.png" alt=""> Participou, ganhou <strong>{{ desconto_participacao }}% de desconto</strong></p>
+    {% else %}
+        <img class="hero-promo__taca" src="/static/img/taca.png" alt="Troféu">
+        <span class="hero-promo__badge">Copa 2026</span>
+        <h1 class="hero-promo__titulo">Nenhum jogo aberto <span class="hero-promo__ouro">no momento</span></h1>
+        <a href="/ranking" class="btn hero-promo__cta">Ver Ranking</a>
+    {% endif %}{% endif %}
+    </div>
+</section>
+
+{% if !encerrado %}{% if let Some(j) = destaque %}
+<!-- MODAL: Faça seu Palpite -->
+<div id="modal-palpite" class="modal" hidden>
+    <div class="palpite-box">
+        <img class="palpite-box__logo" src="/static/img/logo.png" alt="Super Copo">
+
+        <div class="palpite-card">
+            <div class="palpite-card__head">
+                <h2 class="palpite-card__titulo">Faça seu Palpite</h2>
+                <p class="palpite-card__sub">Preencha seus dados e participe!</p>
+            </div>
+
+            <form id="form-palpite" class="palpite-form" novalidate>
+                <input type="hidden" name="jogo_id" value="{{ j.id }}">
+
+                <div class="palpite-form__grupo">
+                    <label for="in-nome">Nome completo</label>
+                    <input id="in-nome" type="text" name="nome" placeholder="Seu nome e sobrenome" minlength="3" required>
+                    <span class="form__erro" id="erro-nome"></span>
+                </div>
+
+                <div class="palpite-form__grupo">
+                    <label for="in-email">E-mail</label>
+                    <input id="in-email" type="email" name="email" placeholder="seu@email.com" required>
+                    <span class="form__erro" id="erro-email"></span>
+                </div>
+
+                <div class="palpite-form__grupo">
+                    <label for="in-tel">Telefone</label>
+                    <input id="in-tel" type="tel" name="telefone" placeholder="(00) 00000-0000" required>
+                    <span class="form__erro" id="erro-telefone"></span>
+                </div>
+
+                <div class="palpite-match">
+                    <div class="palpite-match__row">
+                        <div class="palpite-match__team">
+                            <span class="palpite-match__name">{{ j.time_a }}</span>
+                            <div class="palpite-match__fi">
+                                {% if let Some(b) = j.bandeira_a %}<img class="palpite-match__flag" src="{{ b }}" alt="{{ j.time_a }}">{% else %}<span class="palpite-match__flag palpite-match__flag--ph">⚽</span>{% endif %}
+                                <input type="number" name="gols_time_a" min="0" max="20" placeholder="0" required aria-label="Gols {{ j.time_a }}">
+                            </div>
+                        </div>
+                        <span class="palpite-match__vs">VS</span>
+                        <div class="palpite-match__team">
+                            <span class="palpite-match__name">{{ j.time_b }}</span>
+                            <div class="palpite-match__fi">
+                                <input type="number" name="gols_time_b" min="0" max="20" placeholder="0" required aria-label="Gols {{ j.time_b }}">
+                                {% if let Some(b) = j.bandeira_b %}<img class="palpite-match__flag" src="{{ b }}" alt="{{ j.time_b }}">{% else %}<span class="palpite-match__flag palpite-match__flag--ph">⚽</span>{% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="palpite-form__btn">Enviar Palpite</button>
+                <span class="form__erro" id="erro-geral"></span>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de sucesso -->
+<div id="modal-sucesso" class="modal" hidden>
+    <div class="sucesso-box">
+        <img class="sucesso-box__logo" src="/static/img/logo.png" alt="Super Copo">
+        <div class="sucesso-card">
+            <div class="sucesso-card__icone"><img src="/static/img/taca.png" alt="Troféu"></div>
+            <h2 class="sucesso-card__titulo">Palpite Registrado!</h2>
+            <p class="sucesso-card__sub">Cupom de <strong>{{ desconto_participacao }}% de desconto</strong> garantido</p>
+            <span class="sucesso-card__label">Seu Cupom</span>
+            <div class="sucesso-cupom">
+                <span id="cupom-codigo"></span>
+                <button type="button" class="sucesso-cupom__btn" onclick="copiarCupom()">Copiar</button>
+            </div>
+            {% if let Some(wpp) = whatsapp_url %}
+            <a class="sucesso-card__wpp" href="{{ wpp }}" target="_blank" rel="noopener">
+                <svg viewBox="0 0 32 32" width="20" height="20" fill="currentColor" aria-hidden="true"><path d="M16 .6C7.5.6.6 7.5.6 16c0 2.8.7 5.4 2 7.8L.5 31.5l7.9-2.1c2.3 1.2 4.8 1.9 7.6 1.9 8.5 0 15.4-6.9 15.4-15.4S24.5.6 16 .6zm0 28.2c-2.5 0-4.9-.7-6.9-1.9l-.5-.3-4.7 1.2 1.3-4.6-.3-.5c-1.3-2.1-2-4.4-2-6.8C2.9 8.9 8.8 3 16 3s13.1 5.9 13.1 13.1S23.2 28.8 16 28.8zm7.2-9.8c-.4-.2-2.3-1.1-2.7-1.3-.4-.1-.6-.2-.9.2-.3.4-1 1.3-1.2 1.5-.2.2-.4.3-.8.1-.4-.2-1.7-.6-3.2-2-1.2-1-2-2.3-2.2-2.7-.2-.4 0-.6.2-.8.2-.2.4-.4.6-.7.2-.2.2-.4.4-.7.1-.3.1-.5 0-.7-.1-.2-.9-2.1-1.2-2.9-.3-.8-.6-.7-.9-.7h-.7c-.2 0-.6.1-1 .5-.3.4-1.3 1.3-1.3 3.1s1.3 3.6 1.5 3.9c.2.2 2.6 4 6.3 5.6.9.4 1.6.6 2.1.8.9.3 1.7.2 2.3.1.7-.1 2.3-.9 2.6-1.9.3-.9.3-1.7.2-1.9-.1-.2-.3-.3-.7-.5z"/></svg>
+                WhatsApp
+            </a>
+            {% endif %}
+            <button type="button" class="sucesso-card__fechar" data-fechar-modal>Fechar</button>
+        </div>
+    </div>
+</div>
+{% endif %}{% endif %}
+
+<!-- COMO FUNCIONA -->
+<section class="como-funciona" id="como-funciona">
+    <div class="container">
+        <span class="pilula-titulo">Como Funciona</span>
+
+        <div class="regras-grid">
+            <div class="regra-col">
+                <div class="slogan slogan--linha">Participou,<em>Ganhou!</em></div>
+            </div>
+
+            <div class="regra-col">
+                <p class="regra-topo">
+                    <span class="regra-topo__sm">Ao Participar</span>
+                    <span class="regra-topo__big">você <strong>GANHA</strong></span>
+                </p>
+                <img class="regra-icon" src="/static/img/cupom.png" alt="Cupom de desconto">
+                <div class="regra-destaque">
+                    <span class="regra-destaque__pre">Cupom de</span>
+                    <span class="regra-destaque__valor">{{ desconto_participacao }}%</span>
+                    <span class="regra-destaque__lbl">de desconto</span>
+                    <span class="regra-destaque__pos">em sua próxima compra</span>
+                </div>
+            </div>
+
+            <div class="regra-col">
+                <div class="slogan">Acertar o<em>Placar!</em></div>
+                <img class="regra-icon" src="/static/img/taca.png" alt="Troféu">
+                <div class="regra-destaque">
+                    <span class="regra-destaque__valor">{{ desconto_acerto }}%</span>
+                    <span class="regra-destaque__lbl">de desconto</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- RANKING PARCIAL -->
+<section class="ranking-parcial" id="ranking">
+    <div class="container">
+        <span class="pilula-titulo">Ranking</span>
+
+        <div class="ranking-box" id="ranking-live">
+            <div class="rank-ph"><span class="rank-pos">1º</span></div>
+            <div class="rank-ph"><span class="rank-pos">2º</span></div>
+            <div class="rank-ph"><span class="rank-pos">3º</span></div>
+            <div class="rank-ph"><span class="rank-pos">4º</span></div>
+            <div class="rank-ph"><span class="rank-pos">5º</span></div>
+        </div>
+
+        <a href="/ranking" id="abrir-ranking" class="btn btn--ghost">Ver Ranking Completo</a>
+    </div>
+</section>
+
+<!-- CONSULTAR MEUS CUPONS -->
+<section class="consulta-cupons" id="meus-cupons">
+    <div class="container">
+        <span class="pilula-titulo">Meu Cupom</span>
+        <p class="consulta-cupons__sub">Já participou? Consulte seu cupom pelo e-mail.</p>
+        <form class="consulta" id="form-consulta" novalidate>
+            <input type="email" id="consulta-email" placeholder="seu@email.com" autocomplete="off">
+            <button type="submit" class="btn btn--ghost">Consultar</button>
+        </form>
+        <div id="cupons-resultado"></div>
+    </div>
+</section>
+
+<!-- BANNER PRÊMIO -->
+<section class="banner-premio">
+    <div class="container">
+        <div class="banner-premio__box">
+            <img class="banner-premio__taca" src="/static/img/taca.png" alt="Troféu">
+            <div class="banner-premio__txt">
+                <h2>O melhor palpiteiro da <span class="banner-premio__ouro">Copa</span> será recompensado!</h2>
+                <p>Faça mais pontos com os placares corretos e ganhe um <strong>PRÊMIO EXCLUSIVO!</strong></p>
+                <div class="estrelas">★ ★ ★ ★ ★</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="footer">
+    <div class="container">
+        {% if !redes.is_empty() %}
+        <div class="footer__redes">
+            {% for rede in redes %}
+            <a class="footer__rede" href="{{ rede.url }}" target="_blank" rel="noopener" aria-label="{{ rede.nome }}" title="{{ rede.nome }}">{{ rede.svg|safe }}</a>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <p>© 2026 Super Copo. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+{% endblock %}
+{% block scripts %}
+<script src="/static/js/countdown.js"></script>
+<script src="/static/js/ranking-sse.js"></script>
+<script src="/static/js/share.js"></script>
+<script src="/static/js/form.js"></script>
+<script src="/static/js/meus-cupons.js"></script>
+{% endblock %}

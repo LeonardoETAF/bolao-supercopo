@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: bolao_supercopo
+      POSTGRES_USER: bolao
+      POSTGRES_PASSWORD: bolao123
+    ports:
+      - "5433:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bolao -d bolao_supercopo"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: postgres://bolao:bolao123@postgres:5432/bolao_supercopo
+      JWT_SECRET: troque_em_producao
+      ADMIN_USER: admin
+      ADMIN_PASS: supercopo2026
+      PORT: 3000
+      RUST_LOG: info,tower_http=info
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  pgdata:
