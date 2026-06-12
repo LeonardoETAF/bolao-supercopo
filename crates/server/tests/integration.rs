@@ -40,6 +40,7 @@ async fn setup() -> Option<AppState> {
         config,
         ranking_tx,
         palpite_limiter: server::ratelimit::novo(),
+        login_limiter: server::ratelimit::novo(),
     })
 }
 

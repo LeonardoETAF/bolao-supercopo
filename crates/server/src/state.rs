@@ -13,4 +13,6 @@ pub struct AppState {
     pub ranking_tx: broadcast::Sender<String>,
     /// Limitador de envio de palpites por IP (anti-spam).
     pub palpite_limiter: Limiter,
+    /// Limitador de tentativas de login admin por IP (anti força bruta).
+    pub login_limiter: Limiter,
 }

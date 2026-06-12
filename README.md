@@ -71,12 +71,16 @@ App em <http://localhost:3000> · Postgres exposto em `localhost:5433`.
 
 ## Regras de pontuação
 
-| Situação                         | Pontos | Cupom |
-| -------------------------------- | ------ | ----- |
-| Acerto exato do placar           | 10     | 30%   |
-| Acertou o vencedor (ou o empate) | 5      | —     |
-| Errou                            | 0      | —     |
-| Por participar (qualquer palpite)| —      | 10%   |
+| Situação                              | Pontos | Cupom |
+| ------------------------------------- | ------ | ----- |
+| Acerto exato do placar                | 10     | 30%   |
+| Acertou apenas o vencedor             | 5      | —     |
+| Errou                                 | 0      | —     |
+| Por participar (qualquer palpite)     | —      | 10%   |
+
+> O empate só pontua no **acerto exato do placar** (10): palpitar empate sem
+> cravar o placar é considerado erro (0). Palpitar empate num jogo que teve
+> vencedor — ou vencedor num jogo que empatou — também é erro.
 
 ## Endpoints
 

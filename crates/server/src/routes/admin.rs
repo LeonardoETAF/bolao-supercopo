@@ -3,11 +3,13 @@ use crate::errors::AppError;
 use crate::landing::LandingConfig;
 use crate::models::{gerar_codigo, CriarJogoRequest, Cupom, Jogo, Palpite, ResultadoRequest};
 use crate::routes::calcular_pontos;
+use crate::ratelimit;
 use crate::state::AppState;
-use axum::extract::{Path, Query, State};
+use axum::extract::{ConnectInfo, Path, Query, State};
 use axum::http::StatusCode;
 use axum::Json;
 use serde::{Deserialize, Serialize};
+use std::net::SocketAddr;
 use uuid::Uuid;
 
 #[derive(Debug, Deserialize)]
@@ -26,8 +28,12 @@ pub struct TokenResponse {
 /// POST /admin/login — autentica com as credenciais do .env e devolve um JWT (24h).
 pub async fn login(
     State(state): State<AppState>,
+    ConnectInfo(addr): ConnectInfo<SocketAddr>,
     Json(req): Json<LoginRequest>,
 ) -> Result<Json<TokenResponse>, AppError> {
+    // Anti força bruta: limita tentativas de login por IP.
+    ratelimit::checar_login(&state.login_limiter, addr.ip())?;
+
     let role = if req.usuario == state.config.admin_user && req.senha == state.config.admin_pass {
         "admin"
     } else if req.usuario == state.config.viewer_user && req.senha == state.config.viewer_pass {
@@ -121,6 +127,20 @@ pub async fn informar_resultado(
     Path(jogo_id): Path<Uuid>,
     Json(req): Json<ResultadoRequest>,
 ) -> Result<Json<ResultadoResponse>, AppError> {
+    // 0. Valida o placar informado (mesma faixa dos palpites).
+    if !(0..=20).contains(&req.gols_time_a) || !(0..=20).contains(&req.gols_time_b) {
+        return Err(AppError::Validacao(
+            "Placar deve estar entre 0 e 20".to_string(),
+        ));
+    }
+
+    let cfg = crate::landing::carregar(&state.db).await?;
+    let desconto_acerto = format!("{}%", cfg.cupom_acerto_desconto);
+    let desconto_participacao = format!("{}%", cfg.cupom_participacao_desconto);
+
+    // Tudo numa transação: ou o resultado é aplicado por completo, ou nada muda.
+    let mut tx = state.db.begin().await?;
+
     // 1. Atualiza o placar e encerra o jogo.
     let atualizado = sqlx::query(
         "UPDATE jogos SET placar_a = $1, placar_b = $2, status = 'encerrado', ativo = FALSE
@@ -129,7 +149,7 @@ pub async fn informar_resultado(
     .bind(req.gols_time_a)
     .bind(req.gols_time_b)
     .bind(jogo_id)
-    .execute(&state.db)
+    .execute(&mut *tx)
     .await?;
 
     if atualizado.rows_affected() == 0 {
@@ -139,15 +159,22 @@ pub async fn informar_resultado(
     // 2. Busca os palpites do jogo.
     let palpites = sqlx::query_as::<_, Palpite>("SELECT * FROM palpites WHERE jogo_id = $1")
         .bind(jogo_id)
-        .fetch_all(&state.db)
+        .fetch_all(&mut *tx)
         .await?;
 
-    // 3. Calcula a pontuação de cada palpite. Quem crava o placar (10 pts) tem o
+    // 3. Reinformar/corrigir o resultado deve ser idempotente: zera tudo para o
+    // cupom de participação e, em seguida, promove apenas quem cravou o placar
+    // agora — assim quem deixou de cravar (numa correção) não fica com 30%.
+    sqlx::query("UPDATE cupons SET tipo = $1 WHERE jogo_id = $2")
+        .bind(&desconto_participacao)
+        .bind(jogo_id)
+        .execute(&mut *tx)
+        .await?;
+
+    // 4. Calcula a pontuação de cada palpite. Quem crava o placar (10 pts) tem o
     // cupom de participação PROMOVIDO ao de acerto (substitui o desconto), com o
     // percentual configurado no painel. Quem acerta parcial (5) ou erra (0) mantém
     // o cupom de participação.
-    let cfg = crate::landing::carregar(&state.db).await?;
-    let desconto_acerto = format!("{}%", cfg.cupom_acerto_desconto);
     let mut cupons_30 = 0usize;
     for palpite in &palpites {
         let pontos = calcular_pontos(
@@ -160,7 +187,7 @@ pub async fn informar_resultado(
         sqlx::query("UPDATE palpites SET pontuacao = $1 WHERE id = $2")
             .bind(pontos)
             .bind(palpite.id)
-            .execute(&state.db)
+            .execute(&mut *tx)
             .await?;
 
         if pontos == 10 {
@@ -171,7 +198,7 @@ pub async fn informar_resultado(
             .bind(&desconto_acerto)
             .bind(palpite.usuario_id)
             .bind(jogo_id)
-            .execute(&state.db)
+            .execute(&mut *tx)
             .await?
             .rows_affected();
 
@@ -184,14 +211,16 @@ pub async fn informar_resultado(
                 .bind(jogo_id)
                 .bind(&desconto_acerto)
                 .bind(gerar_codigo())
-                .execute(&state.db)
+                .execute(&mut *tx)
                 .await?;
             }
             cupons_30 += 1;
         }
     }
 
-    // 4. Notifica o ranking ao vivo.
+    tx.commit().await?;
+
+    // 5. Notifica o ranking ao vivo.
     let _ = state.ranking_tx.send("atualizar".to_string());
 
     tracing::info!(jogo = %jogo_id, processados = palpites.len(), cupons_30, "resultado processado");

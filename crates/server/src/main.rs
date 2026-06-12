@@ -12,6 +12,16 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let config = Config::from_env()?;
+
+    // Alerta de segurança: nunca rode em produção com o segredo padrão, ou
+    // qualquer um pode forjar um token de admin.
+    if config.jwt_secret == "dev_secret_inseguro" {
+        tracing::warn!(
+            "JWT_SECRET não definido — usando segredo de desenvolvimento INSEGURO. \
+             Defina JWT_SECRET com um valor aleatório longo antes de ir para produção."
+        );
+    }
+
     let db = db::create_pool(&config.database_url).await?;
     tracing::info!("migrations aplicadas; banco pronto");
 
@@ -22,6 +32,7 @@ async fn main() -> anyhow::Result<()> {
         config,
         ranking_tx,
         palpite_limiter: ratelimit::novo(),
+        login_limiter: ratelimit::novo(),
     };
 
     let app = montar_app(state);
