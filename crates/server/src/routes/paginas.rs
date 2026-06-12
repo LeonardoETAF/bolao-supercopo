@@ -5,7 +5,9 @@ use crate::state::AppState;
 use askama::Template;
 use axum::extract::State;
 use axum::response::Html;
-use frontend::{AdminTemplate, IndexTemplate, JogoView, PodioView, RankingTemplate, RedeView};
+use frontend::{
+    AdminTemplate, IndexTemplate, JogoView, PodioView, RankingTemplate, RedeView, RegrasTemplate,
+};
 
 fn render<T: Template>(tpl: T) -> Result<Html<String>, AppError> {
     let html = tpl
@@ -96,32 +98,53 @@ async fn redes_e_whatsapp(state: &AppState) -> (Vec<RedeView>, Option<String>) {
 /// GET / — landing page. Se o bolão estiver encerrado, mostra o pódio;
 /// caso contrário, mostra os jogos abertos (1 destaque + lista).
 pub async fn index(State(state): State<AppState>) -> Result<Html<String>, AppError> {
-    // Bolão encerrado: exibe o pódio (top 3 com pontuação > 0).
+    // Bolão encerrado: exibe o pódio FINAL (top 3 entre os elegíveis ao prêmio).
+    // Elegibilidade (regras 6.2/7.1/7.2): só concorre ao prêmio final quem
+    // conquistou pelo menos um cupom e UTILIZOU TODOS eles. Quem deixou cupom
+    // sem usar não entra no pódio — o que implementa o repasse ao próximo
+    // colocado elegível (7.2). O 1º elegível é o Palpiteiro Campeão (5.1).
     if bolao::esta_encerrado(&state.db).await? {
         let linhas = sqlx::query_as::<_, PodioRow>(
             r#"
             SELECT u.nome, COALESCE(SUM(p.pontuacao), 0)::BIGINT AS total_pontos
             FROM usuarios u
             LEFT JOIN palpites p ON p.usuario_id = u.id
+            WHERE EXISTS (SELECT 1 FROM cupons c WHERE c.usuario_id = u.id)
+              AND NOT EXISTS (
+                  SELECT 1 FROM cupons c
+                  WHERE c.usuario_id = u.id AND c.utilizado = FALSE
+              )
             GROUP BY u.id, u.nome
             HAVING COALESCE(SUM(p.pontuacao), 0) > 0
             ORDER BY total_pontos DESC,
-                     COUNT(*) FILTER (WHERE p.pontuacao = 10) DESC
+                     MAX(p.criado_em) DESC NULLS LAST,
+                     u.nome ASC
             LIMIT 3
             "#,
         )
         .fetch_all(&state.db)
         .await?;
 
-        let podio = linhas
-            .into_iter()
-            .enumerate()
-            .map(|(i, r)| PodioView {
-                posicao: i as i64 + 1,
+        // Maior pontuação entre os elegíveis (primeira linha, ordenada DESC).
+        // Todos que empatam nessa pontuação são campeões (co-campeões).
+        let max_pontos = linhas.first().map(|r| r.total_pontos).unwrap_or(0);
+
+        // Posição compartilhada em caso de empate (RANK): co-campeões ficam todos em 1º.
+        let mut podio: Vec<PodioView> = Vec::with_capacity(linhas.len());
+        let mut posicao = 0i64;
+        let mut pontos_anterior: Option<i64> = None;
+        for (i, r) in linhas.into_iter().enumerate() {
+            if pontos_anterior != Some(r.total_pontos) {
+                posicao = i as i64 + 1;
+                pontos_anterior = Some(r.total_pontos);
+            }
+            podio.push(PodioView {
+                posicao,
+                campeao: r.total_pontos == max_pontos,
                 nome: r.nome,
                 total_pontos: r.total_pontos,
-            })
-            .collect();
+            });
+        }
 
         let (redes, whatsapp_url) = redes_e_whatsapp(&state).await;
         let cfg = crate::landing::carregar(&state.db).await.unwrap_or_default();
@@ -170,6 +193,11 @@ pub async fn index(State(state): State<AppState>) -> Result<Html<String>, AppErr
 /// GET /ranking — página de ranking completo (dados carregados via JS/SSE).
 pub async fn ranking_page() -> Result<Html<String>, AppError> {
     render(RankingTemplate {})
+}
+
+/// GET /regras — tela com o vídeo de regras (embed do YouTube, toca na página).
+pub async fn regras_page() -> Result<Html<String>, AppError> {
+    render(RegrasTemplate {})
 }
 
 /// GET /admin — painel administrativo (login + gestão via JS/fetch).

@@ -134,6 +134,7 @@
     definirErro('erro-nome', '');
     definirErro('erro-telefone', '');
     definirErro('erro-email', '');
+    definirErro('erro-regras', '');
     var geral = document.getElementById('erro-geral');
     if (geral) {
       geral.textContent = '';
@@ -166,6 +167,7 @@
     var inputEmail = form.querySelector('[name="email"]');
     var inputTelefone = form.querySelector('[name="telefone"]');
     var inputNome = form.querySelector('[name="nome"]');
+    var inputAceite = form.querySelector('[name="aceite_regras"]');
 
     /* ---- Máscaras em tempo real ---- */
 
@@ -191,6 +193,14 @@
       inputNome.addEventListener('input', function () {
         if (inputNome.value.trim().length >= 3) {
           definirErro('erro-nome', '');
+        }
+      });
+    }
+
+    if (inputAceite) {
+      inputAceite.addEventListener('change', function () {
+        if (inputAceite.checked) {
+          definirErro('erro-regras', '');
         }
       });
     }
@@ -229,6 +239,12 @@
       var golsBVazio = !golsBEl || golsBEl.value.trim() === '';
       if (golsAVazio || golsBVazio) {
         mostrarErroGeral('Informe o placar.');
+        ok = false;
+      }
+
+      // Aceite das regras: obrigatório.
+      if (!inputAceite || !inputAceite.checked) {
+        definirErro('erro-regras', 'Você precisa confirmar que leu as regras.');
         ok = false;
       }
 

@@ -17,6 +17,9 @@ pub struct PodioView {
     pub posicao: i64,
     pub nome: String,
     pub total_pontos: i64,
+    /// Campeão: elegível e com a MAIOR pontuação. Em caso de empate na maior
+    /// pontuação, todos os empatados são campeões (co-campeões).
+    pub campeao: bool,
 }
 
 /// Rede social ativa exibida no rodapé da home.
@@ -46,6 +49,10 @@ pub struct IndexTemplate {
 #[derive(Template)]
 #[template(path = "ranking.html")]
 pub struct RankingTemplate {}
+
+#[derive(Template)]
+#[template(path = "regras.html")]
+pub struct RegrasTemplate {}
 
 #[derive(Template)]
 #[template(path = "admin.html")]

@@ -26,13 +26,17 @@
         {% if podio.len() > 0 %}
         <ol class="podio podio--hero">
             {% for p in podio %}
-            <li class="podio__lugar podio__lugar--{{ p.posicao }}">
+            <li class="podio__lugar podio__lugar--{{ p.posicao }}{% if p.campeao %} podio__lugar--campeao{% endif %}">
                 <span class="podio__pos">{{ p.posicao }}º</span>
                 <span class="podio__nome">{{ p.nome }}</span>
+                {% if p.campeao %}<span class="podio__titulo">🏆 Palpiteiro Campeão</span>{% endif %}
                 <span class="podio__pts">{{ p.total_pontos }} pts</span>
             </li>
             {% endfor %}
         </ol>
+        {% else %}
+        <p class="hero-promo__sub">Apuração final em andamento. O pódio considera apenas
+            participantes que utilizaram todos os cupons conquistados.</p>
         {% endif %}
         <a href="/ranking" class="btn hero-promo__cta">Ver Ranking</a>
     {% else %}{% if let Some(j) = destaque %}
@@ -123,6 +127,13 @@
                     </div>
                 </div>
 
+                <label class="palpite-regras" for="in-aceite">
+                    <input type="checkbox" id="in-aceite" name="aceite_regras" required>
+                    <span>Confirmo que li as
+                        <a href="/regras" target="_blank" rel="noopener">regras</a>.</span>
+                </label>
+                <span class="form__erro" id="erro-regras"></span>
+
                 <button type="submit" class="palpite-form__btn">Enviar Palpite</button>
                 <span class="form__erro" id="erro-geral"></span>
             </form>
@@ -188,6 +199,16 @@
                 </div>
             </div>
         </div>
+    </div>
+</section>
+
+<!-- BOTÃO: tela com as regras -->
+<section class="regras-cta">
+    <div class="container">
+        <a href="/regras" class="btn hero-promo__cta regras-cta__btn">
+            <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            Confira as Regras
+        </a>
     </div>
 </section>
 

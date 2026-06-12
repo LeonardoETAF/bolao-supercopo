@@ -28,6 +28,7 @@ pub fn montar_app(state: AppState) -> Router {
         // Páginas
         .route("/", get(routes::paginas::index))
         .route("/ranking", get(routes::paginas::ranking_page))
+        .route("/regras", get(routes::paginas::regras_page))
         .route("/admin", get(routes::paginas::painel))
         // API pública
         .route("/api/palpite", post(routes::palpites::enviar_palpite))
@@ -53,6 +54,10 @@ pub fn montar_app(state: AppState) -> Router {
             put(routes::admin::informar_resultado),
         )
         .route("/admin/metricas", get(routes::admin::metricas))
+        .route(
+            "/admin/classificacao-final",
+            get(routes::admin::classificacao_final),
+        )
         .route("/admin/cupons", get(routes::admin::listar_cupons))
         .route("/admin/cupons/:id/utilizar", put(routes::admin::marcar_cupom))
         .route(

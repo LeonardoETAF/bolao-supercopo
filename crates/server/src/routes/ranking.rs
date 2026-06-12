@@ -43,7 +43,8 @@ pub struct RankingResponse {
 
 /// GET /api/ranking?page=N&q=texto — ranking paginado (20 por página) com busca por nome.
 /// A posição é sempre a do ranking global (não muda ao filtrar pela busca).
-/// Critério de desempate: pontos, acertos exatos, nº de palpites, quem palpitou antes.
+/// Ordenação: maior pontuação primeiro; em empate, quem palpitou por ÚLTIMO
+/// (palpite mais recente) fica à frente; por fim, nome (desempate estável).
 pub async fn ranking_completo(
     State(state): State<AppState>,
     Query(params): Query<RankingParams>,
@@ -80,9 +81,8 @@ pub async fn ranking_completo(
                 ROW_NUMBER() OVER (
                     ORDER BY
                         COALESCE(SUM(p.pontuacao), 0) DESC,
-                        COUNT(*) FILTER (WHERE p.pontuacao = 10) DESC,
-                        COUNT(p.id) DESC,
-                        MIN(p.criado_em) ASC NULLS LAST
+                        MAX(p.criado_em) DESC NULLS LAST,
+                        u.nome ASC
                 )::BIGINT                                               AS posicao
             FROM usuarios u
             LEFT JOIN palpites p ON p.usuario_id = u.id

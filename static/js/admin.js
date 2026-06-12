@@ -88,13 +88,18 @@
 
   // ---- Carregamentos ----
   async function carregarTudo() {
-    // Viewer só enxerga Métricas e Leads.
+    // Viewer só enxerga Métricas, Classificação Final e Leads.
     if (userRole === "viewer") {
-      await Promise.all([carregarMetricas(), carregarCupons()]);
+      await Promise.all([
+        carregarMetricas(),
+        carregarClassificacaoFinal(),
+        carregarCupons(),
+      ]);
       return;
     }
     await Promise.all([
       carregarMetricas(),
+      carregarClassificacaoFinal(),
       carregarJogos(),
       carregarCupons(),
       carregarLanding(),
@@ -308,6 +313,7 @@
         st.textContent = `Resultado divulgado! ${data.processados} palpites apurados, ${data.cupons_30} cupons gerados.`;
       await carregarJogos();
       await carregarMetricas();
+      await carregarClassificacaoFinal();
       atualizarResultado();
     } catch (err) {
       if (st) st.textContent = err.message;
@@ -521,6 +527,45 @@
   let filtroCupons = "";
   let buscaCupons = "";
 
+  async function carregarClassificacaoFinal() {
+    const alvo = $("#lista-classificacao");
+    if (!alvo) return;
+    const res = await fetch("/admin/classificacao-final", {
+      headers: authHeaders(),
+    });
+    if (res.status === 401) return sair();
+    const linhas = await res.json();
+    if (!Array.isArray(linhas) || linhas.length === 0) {
+      alvo.innerHTML =
+        '<p class="classif-vazia">Ainda não há pontuações para classificar.</p>';
+      return;
+    }
+    // Campeão = elegível com a maior pontuação. Empate na maior pontuação
+    // gera co-campeões (o backend marca todos com r.campeao).
+    alvo.innerHTML = linhas
+      .map((r) => {
+        const ehCampeao = !!r.campeao;
+        const faltam = Math.max(0, r.cupons_total - r.cupons_utilizados);
+        const status = r.elegivel
+          ? '<span class="classif-badge classif-badge--ok">Elegível</span>'
+          : `<span class="classif-badge classif-badge--no">Faltam ${faltam} cupom${faltam === 1 ? "" : "s"}</span>`;
+        const selo = ehCampeao
+          ? ' <span class="classif-badge classif-badge--camp">🏆 Campeão</span>'
+          : "";
+        return (
+          `<div class="classif-row${ehCampeao ? " is-campeao" : ""}${r.elegivel ? "" : " is-inelegivel"}">` +
+          `<span class="classif-pos">${r.posicao}º</span>` +
+          `<div class="classif-info">` +
+          `<span class="classif-nome">${escapeHtml(r.nome)}${selo}</span>` +
+          `<span class="classif-sub">${r.total_pontos} pts · ${r.acertos_exatos} cravada${r.acertos_exatos === 1 ? "" : "s"} · cupons ${r.cupons_utilizados}/${r.cupons_total}</span>` +
+          `</div>` +
+          status +
+          `</div>`
+        );
+      })
+      .join("");
+  }
+
   async function carregarCupons() {
     const alvo = $("#lista-cupons");
     if (!alvo) return;
@@ -590,6 +635,8 @@
     if (res.ok) {
       carregarCupons();
       carregarMetricas();
+      // Dar baixa num cupom pode alterar a elegibilidade ao prêmio final.
+      carregarClassificacaoFinal();
     } else {
       console.error("Erro ao dar baixa no cupom");
     }
@@ -733,6 +780,9 @@
         carregarCupons();
         carregarMetricas();
       });
+    const btnReloadClassif = $("#btn-recarregar-classif");
+    if (btnReloadClassif)
+      btnReloadClassif.addEventListener("click", carregarClassificacaoFinal);
     document
       .querySelectorAll("select[data-flagprev]")
       .forEach((sel) =>

@@ -380,6 +380,79 @@ pub async fn metricas(
     }))
 }
 
+#[derive(Debug, Serialize, sqlx::FromRow)]
+pub struct ClassificacaoFinalRow {
+    /// Posição no ranking por pontos (empate na pontuação compartilha a posição).
+    pub posicao: i64,
+    pub nome: String,
+    pub total_pontos: i64,
+    pub acertos_exatos: i64,
+    pub cupons_total: i64,
+    pub cupons_utilizados: i64,
+    /// Elegível ao prêmio final (regra 7.1): conquistou ≥1 cupom e usou todos.
+    pub elegivel: bool,
+    /// Campeão: elegível e com a MAIOR pontuação entre os elegíveis. Em caso de
+    /// empate na maior pontuação, todos os empatados são campeões (co-campeões).
+    pub campeao: bool,
+}
+
+/// GET /admin/classificacao-final — ranking por pontos com o status de
+/// elegibilidade ao prêmio final de cada participante. Serve para a organização
+/// aplicar as regras 7.1/7.2 (desclassificar quem não usou todos os cupons e
+/// repassar ao próximo elegível) com transparência. Acessível a admin e viewer.
+pub async fn classificacao_final(
+    State(state): State<AppState>,
+    _claims: AdminClaims,
+) -> Result<Json<Vec<ClassificacaoFinalRow>>, AppError> {
+    let rows = sqlx::query_as::<_, ClassificacaoFinalRow>(
+        r#"
+        WITH base AS (
+            SELECT
+                u.id,
+                u.nome,
+                COALESCE(SUM(p.pontuacao), 0)::BIGINT                 AS total_pontos,
+                COUNT(*) FILTER (WHERE p.pontuacao = 10)::BIGINT      AS acertos_exatos,
+                MAX(p.criado_em)                                      AS ultimo_palpite,
+                (SELECT COUNT(*) FROM cupons c
+                   WHERE c.usuario_id = u.id)::BIGINT                 AS cupons_total,
+                (SELECT COUNT(*) FROM cupons c
+                   WHERE c.usuario_id = u.id AND c.utilizado)::BIGINT AS cupons_utilizados
+            FROM usuarios u
+            LEFT JOIN palpites p ON p.usuario_id = u.id
+            GROUP BY u.id, u.nome
+        ),
+        calc AS (
+            SELECT *,
+                (cupons_total >= 1 AND cupons_utilizados = cupons_total) AS elegivel
+            FROM base
+        )
+        SELECT
+            -- Empate na pontuação compartilha a posição (RANK, não ROW_NUMBER).
+            RANK() OVER (ORDER BY total_pontos DESC)::BIGINT          AS posicao,
+            nome,
+            total_pontos,
+            acertos_exatos,
+            cupons_total,
+            cupons_utilizados,
+            elegivel,
+            -- Campeão: elegível e com a maior pontuação ENTRE OS ELEGÍVEIS.
+            -- Todos que empatam nessa pontuação máxima são campeões.
+            (elegivel
+             AND total_pontos > 0
+             AND total_pontos = (SELECT MAX(total_pontos) FROM calc WHERE elegivel)
+            )                                                         AS campeao
+        FROM calc
+        WHERE total_pontos > 0
+        ORDER BY total_pontos DESC, ultimo_palpite DESC NULLS LAST, nome
+        LIMIT 100
+        "#,
+    )
+    .fetch_all(&state.db)
+    .await?;
+
+    Ok(Json(rows))
+}
+
 #[derive(Debug, Deserialize)]
 pub struct CuponsParams {
     /// "utilizados" | "disponiveis" | ausente = todos

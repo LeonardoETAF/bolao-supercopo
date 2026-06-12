@@ -1171,6 +1171,11 @@ a { color: inherit; text-decoration: none; }
 .podio__lugar--1 { background: linear-gradient(90deg, #ffe9a8, #ffcf3f); box-shadow: 0 4px 14px rgba(0,0,0,.25); }
 .podio__lugar--2 { background: linear-gradient(90deg, #eaeaea, #cfcfcf); }
 .podio__lugar--3 { background: linear-gradient(90deg, #f0c89a, #d8995a); }
+/* Co-campeões (empate na maior pontuação): destaque dourado independente da posição. */
+.podio__lugar--campeao {
+    background: linear-gradient(90deg, #ffe9a8, #ffcf3f);
+    box-shadow: 0 0 0 2px var(--ouro), 0 4px 14px rgba(0,0,0,.25);
+}
 .podio__pos { font-family: 'Anton', sans-serif; font-size: 1.5rem; }
 .podio__nome { text-align: left; font-size: 1.05rem; }
 .podio__pts { font-family: 'Anton', sans-serif; }
@@ -1437,3 +1442,70 @@ a { color: inherit; text-decoration: none; }
 @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; scroll-behavior: auto; }
 }
+
+/* =========================================================================
+   CLASSIFICAÇÃO FINAL (painel admin — elegibilidade ao prêmio)
+   ========================================================================= */
+.admin-classificacao { display: flex; flex-direction: column; gap: .5rem; }
+.classif-row {
+    display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .7rem;
+    padding: .65rem .9rem;
+    border: 2px solid rgba(255,255,255,.18); border-radius: 10px;
+    background: rgba(255,255,255,.04); text-align: left;
+}
+.classif-row.is-campeao { border-color: var(--ouro); background: rgba(255,196,0,.10); }
+.classif-row.is-inelegivel { opacity: .72; }
+.classif-pos { font-family: 'Anton', sans-serif; font-size: 1.15rem; color: var(--ouro); min-width: 2.2rem; }
+.classif-info { display: flex; flex-direction: column; gap: .15rem; min-width: 0; }
+.classif-nome { font-weight: 700; }
+.classif-sub { color: var(--texto-mut); font-size: .82rem; }
+.classif-badge {
+    font-size: .72rem; font-weight: 700; letter-spacing: .02em;
+    padding: .25rem .6rem; border-radius: 999px; white-space: nowrap;
+}
+.classif-badge--ok   { background: rgba(70,255,92,.16); color: var(--verde-neon); border: 1px solid rgba(70,255,92,.5); }
+.classif-badge--no   { background: rgba(255,90,90,.14); color: #ff9b9b; border: 1px solid rgba(255,90,90,.45); }
+.classif-badge--camp { background: var(--ouro); color: #1a1200; border: 1px solid var(--ouro-escuro); }
+.classif-vazia { color: var(--texto-mut); }
+
+/* Pódio: título "Palpiteiro Campeão" no 1º lugar (home encerrada) */
+.podio__titulo {
+    display: block; font-family: 'Anton', sans-serif; text-transform: uppercase;
+    color: var(--ouro); font-size: .85rem; letter-spacing: .03em; margin-top: .2rem;
+}
+.hero-promo__sub { color: var(--texto-mut); max-width: 32rem; margin: .4rem auto 1rem; }
+
+/* =========================================================================
+   REGRAS — botão na home + tela /regras + aceite no formulário
+   ========================================================================= */
+/* Botão (home) que leva à tela de regras. */
+.regras-cta { padding: 0 0 1rem; text-align: center; }
+.regras-cta__btn { display: inline-flex; align-items: center; gap: .5rem; }
+
+/* Tela dedicada das regras (header é fixo → folga no topo). */
+.regras-pagina { padding-top: 8rem; padding-bottom: 3rem; min-height: 70vh; }
+.regras-doc { max-width: 760px; }
+.regras-doc__titulo {
+    font-family: 'Anton', sans-serif; text-transform: uppercase;
+    color: var(--ouro); font-size: 2rem; margin: .6rem 0 1.4rem;
+}
+.regras-doc__sec {
+    font-family: 'Anton', sans-serif; text-transform: uppercase;
+    color: var(--ouro); font-size: 1.25rem; letter-spacing: .02em;
+    margin: 1.6rem 0 .5rem; padding-top: 1rem;
+    border-top: 1px solid rgba(255,196,0,.25);
+}
+.regras-doc p { color: var(--texto, #fff); line-height: 1.55; margin: .4rem 0; }
+.regras-doc p strong { color: var(--ouro); }
+.regras-doc__lista { margin: .4rem 0 .4rem 1.2rem; line-height: 1.7; }
+.regras-doc__lista li { margin: .2rem 0; }
+.regras-doc__voltar { margin-top: 2rem; }
+
+/* Aceite das regras no formulário de palpite. */
+.palpite-regras {
+    display: flex; align-items: flex-start; gap: .55rem;
+    margin: .2rem 0 .2rem; text-align: left; cursor: pointer;
+    font-size: .92rem; color: var(--texto-mut);
+}
+.palpite-regras input { margin-top: .2rem; width: 1.1rem; height: 1.1rem; accent-color: var(--ouro); cursor: pointer; flex: none; }
+.palpite-regras a { color: var(--ouro); text-decoration: underline; }

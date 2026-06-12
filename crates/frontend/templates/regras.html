@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Regras — Super Bolão{% endblock %}
+{% block body %}
+
+<header class="header is-scrolled">
+    <div class="container header__inner">
+        <a href="/" class="header__logo"><img src="/static/img/logo.png" alt="Super Copo"></a>
+        <nav class="header__nav">
+            <a href="/#como-funciona">Como Funciona</a>
+            <a href="/ranking">Ranking</a>
+        </nav>
+    </div>
+</header>
+
+<section class="regras-pagina">
+    <div class="container regras-doc">
+        <span class="pilula-titulo">Regras</span>
+        <h1 class="regras-doc__titulo">Super Bolão</h1>
+
+        <h2 class="regras-doc__sec">Participação</h2>
+        <p><strong>1.1.</strong> Ao participar do Bolão da Copa, o participante receberá um cupom de 10% de desconto para utilização em compras durante o período da campanha.</p>
+
+        <h2 class="regras-doc__sec">Premiação por Acerto</h2>
+        <p><strong>2.1.</strong> O participante que acertar o placar exato de uma partida receberá um cupom de 30% de desconto.</p>
+        <p><strong>2.2.</strong> Os cupons são individuais, válidos para um único pedido e não são cumulativos com outros cupons ou promoções.</p>
+
+        <h2 class="regras-doc__sec">Sistema de Pontuação</h2>
+        <p>A classificação do ranking será definida pela seguinte pontuação:</p>
+        <ul class="regras-doc__lista">
+            <li>10 pontos por acertar o placar exato da partida;</li>
+            <li>5 pontos por acertar apenas o vencedor da partida;</li>
+            <li>0 pontos em caso de erro no resultado.</li>
+        </ul>
+
+        <h2 class="regras-doc__sec">Ranking de Palpiteiros</h2>
+        <p><strong>4.1.</strong> Todos os participantes acumulam pontos ao longo da competição conforme seus resultados.</p>
+        <p><strong>4.2.</strong> O ranking será atualizado durante a Copa para acompanhamento dos participantes.</p>
+
+        <h2 class="regras-doc__sec">Premiação Final</h2>
+        <p><strong>5.1.</strong> Ao término da Copa, o participante com a maior pontuação acumulada será declarado Palpiteiro Campeão.</p>
+        <p><strong>5.2.</strong> O vencedor receberá um prêmio exclusivo definido pela organização da campanha.</p>
+
+        <h2 class="regras-doc__sec">Utilização dos Cupons</h2>
+        <p><strong>6.1.</strong> Cada cupom conquistado deverá ser utilizado em uma compra distinta.</p>
+        <p><strong>6.2.</strong> Cupons não utilizados não serão considerados para validação da participação no ranking final.</p>
+
+        <h2 class="regras-doc__sec">Condição para Recebimento do Prêmio Final</h2>
+        <p><strong>7.1.</strong> Para ter direito ao prêmio de Palpiteiro Campeão, o participante deverá ter utilizado todos os cupons conquistados durante a campanha.</p>
+        <p><strong>7.2.</strong> Caso o primeiro colocado não cumpra esta condição, a organização poderá desclassificá-lo da premiação final, repassando o prêmio ao próximo participante elegível no ranking.</p>
+
+        <a href="/" class="btn btn--secundario regras-doc__voltar">Voltar ao Início</a>
+    </div>
+</section>
+
+<footer class="footer">
+    <div class="container">
+        <p>© 2026 Super Copo. Todos os direitos reservados.</p>
+    </div>
+</footer>
+
+{% endblock %}
