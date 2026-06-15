@@ -6,11 +6,18 @@
     <title>{% block title %}Bolão Super Copo — Copa do Mundo{% endblock %}</title>
     <meta name="description" content="Bolão da Copa Super Copo: faça seu palpite, ganhe cupons de desconto e suba no ranking ao vivo!">
     <link rel="icon" type="image/png" href="/static/img/logo.png">
-    <!-- Open Graph (compartilhamento) -->
+    <!-- Open Graph (compartilhamento — WhatsApp exige URL ABSOLUTA na imagem) -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Bolão da Copa Super Copo">
     <meta property="og:description" content="Faça seu palpite, ganhe cupons de desconto e concorra a um prêmio exclusivo!">
-    <meta property="og:image" content="/static/img/logo.png">
+    <meta property="og:image" content="{{ base_url }}/static/img/og-share.jpg">
+    <meta property="og:image:secure_url" content="{{ base_url }}/static/img/og-share.jpg">
+    <meta property="og:image:type" content="image/jpeg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Bolão da Copa Super Copo">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:image" content="{{ base_url }}/static/img/og-share.jpg">
     <link rel="stylesheet" href="/static/css/style.css?v=37">
 </head>
 <body>

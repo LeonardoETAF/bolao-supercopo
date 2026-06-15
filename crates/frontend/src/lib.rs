@@ -44,16 +44,40 @@ pub struct IndexTemplate {
     /// Percentuais de desconto configurados no painel (cupons).
     pub desconto_participacao: i32,
     pub desconto_acerto: i32,
+    /// URL base absoluta (ex.: https://dominio) p/ montar a imagem do Open Graph.
+    pub base_url: String,
 }
 
 #[derive(Template)]
 #[template(path = "ranking.html")]
-pub struct RankingTemplate {}
+pub struct RankingTemplate {
+    pub base_url: String,
+}
 
 #[derive(Template)]
 #[template(path = "regras.html")]
-pub struct RegrasTemplate {}
+pub struct RegrasTemplate {
+    pub base_url: String,
+}
 
 #[derive(Template)]
 #[template(path = "admin.html")]
-pub struct AdminTemplate {}
+pub struct AdminTemplate {
+    pub base_url: String,
+}
+
+#[cfg(test)]
+mod og_tests {
+    use super::*;
+    use askama::Template;
+
+    #[test]
+    fn og_image_usa_url_absoluta() {
+        let html = RegrasTemplate { base_url: "https://supercopo.com.br".into() }
+            .render()
+            .unwrap();
+        assert!(html.contains(r#"property="og:image" content="https://supercopo.com.br/static/img/og-share.jpg""#),
+            "og:image absoluto ausente no HTML");
+        assert!(html.contains(r#"name="twitter:image" content="https://supercopo.com.br/static/img/og-share.jpg""#));
+    }
+}

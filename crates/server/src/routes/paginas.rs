@@ -4,6 +4,7 @@ use crate::models::Jogo;
 use crate::state::AppState;
 use askama::Template;
 use axum::extract::State;
+use axum::http::HeaderMap;
 use axum::response::Html;
 use frontend::{
     AdminTemplate, IndexTemplate, JogoView, PodioView, RankingTemplate, RedeView, RegrasTemplate,
@@ -14,6 +15,28 @@ fn render<T: Template>(tpl: T) -> Result<Html<String>, AppError> {
         .render()
         .map_err(|e| AppError::Interno(anyhow::anyhow!("falha ao renderizar template: {e}")))?;
     Ok(Html(html))
+}
+
+/// Monta a URL base absoluta (ex.: `https://dominio`) a partir dos cabeçalhos da
+/// requisição. Necessária para a imagem do Open Graph (WhatsApp não aceita URL
+/// relativa). Respeita `X-Forwarded-Host`/`X-Forwarded-Proto` (proxy reverso) e
+/// assume `https` fora de localhost.
+fn base_url(headers: &HeaderMap) -> String {
+    let header_str = |nome: &str| headers.get(nome).and_then(|v| v.to_str().ok());
+
+    let host = header_str("x-forwarded-host")
+        .or_else(|| header_str("host"))
+        .unwrap_or("localhost:3000");
+
+    let proto = header_str("x-forwarded-proto").unwrap_or({
+        if host.starts_with("localhost") || host.starts_with("127.0.0.1") {
+            "http"
+        } else {
+            "https"
+        }
+    });
+
+    format!("{proto}://{host}")
 }
 
 /// Mapeia o nome do time (PT ou EN) para a bandeira disponível em static/img.
@@ -97,7 +120,11 @@ async fn redes_e_whatsapp(state: &AppState) -> (Vec<RedeView>, Option<String>) {
 
 /// GET / — landing page. Se o bolão estiver encerrado, mostra o pódio;
 /// caso contrário, mostra os jogos abertos (1 destaque + lista).
-pub async fn index(State(state): State<AppState>) -> Result<Html<String>, AppError> {
+pub async fn index(
+    State(state): State<AppState>,
+    headers: HeaderMap,
+) -> Result<Html<String>, AppError> {
+    let base = base_url(&headers);
     // Bolão encerrado: exibe o pódio FINAL (top 3 entre os elegíveis ao prêmio).
     // Elegibilidade (regras 6.2/7.1/7.2): só concorre ao prêmio final quem
     // conquistou pelo menos um cupom e UTILIZOU TODOS eles. Quem deixou cupom
@@ -157,6 +184,7 @@ pub async fn index(State(state): State<AppState>) -> Result<Html<String>, AppErr
             whatsapp_url,
             desconto_participacao: cfg.cupom_participacao_desconto,
             desconto_acerto: cfg.cupom_acerto_desconto,
+            base_url: base,
         });
     }
 
@@ -187,20 +215,27 @@ pub async fn index(State(state): State<AppState>) -> Result<Html<String>, AppErr
         whatsapp_url,
         desconto_participacao: cfg.cupom_participacao_desconto,
         desconto_acerto: cfg.cupom_acerto_desconto,
+        base_url: base,
     })
 }
 
 /// GET /ranking — página de ranking completo (dados carregados via JS/SSE).
-pub async fn ranking_page() -> Result<Html<String>, AppError> {
-    render(RankingTemplate {})
+pub async fn ranking_page(headers: HeaderMap) -> Result<Html<String>, AppError> {
+    render(RankingTemplate {
+        base_url: base_url(&headers),
+    })
 }
 
-/// GET /regras — tela com o vídeo de regras (embed do YouTube, toca na página).
-pub async fn regras_page() -> Result<Html<String>, AppError> {
-    render(RegrasTemplate {})
+/// GET /regras — tela com as regras escritas do bolão.
+pub async fn regras_page(headers: HeaderMap) -> Result<Html<String>, AppError> {
+    render(RegrasTemplate {
+        base_url: base_url(&headers),
+    })
 }
 
 /// GET /admin — painel administrativo (login + gestão via JS/fetch).
-pub async fn painel() -> Result<Html<String>, AppError> {
-    render(AdminTemplate {})
+pub async fn painel(headers: HeaderMap) -> Result<Html<String>, AppError> {
+    render(AdminTemplate {
+        base_url: base_url(&headers),
+    })
 }
