@@ -653,6 +653,9 @@ a { color: inherit; text-decoration: none; }
 }
 .footer img { height: 40px; margin: 0 auto .4rem; }
 .footer p { color: var(--texto-mut); font-size: .85rem; }
+.footer__links { margin-bottom: .35rem; }
+.footer__links a { color: var(--texto-mut); text-decoration: none; }
+.footer__links a:hover { color: var(--ouro); text-decoration: underline; }
 .footer__redes {
     display: flex; justify-content: center; gap: .8rem;
     margin-bottom: 1rem;
@@ -1495,11 +1498,16 @@ a { color: inherit; text-decoration: none; }
     margin: 1.6rem 0 .5rem; padding-top: 1rem;
     border-top: 1px solid rgba(255,196,0,.25);
 }
+.regras-doc__sub {
+    font-family: 'Anton', sans-serif; color: #fff; font-size: 1rem;
+    letter-spacing: .02em; margin: 1rem 0 .3rem;
+}
 .regras-doc p { color: var(--texto, #fff); line-height: 1.55; margin: .4rem 0; }
 .regras-doc p strong { color: var(--ouro); }
 .regras-doc__lista { margin: .4rem 0 .4rem 1.2rem; line-height: 1.7; }
 .regras-doc__lista li { margin: .2rem 0; }
 .regras-doc__voltar { margin-top: 2rem; }
+.regras-doc__placeholder { color: var(--texto-mut); font-style: italic; }
 
 /* Aceite das regras no formulário de palpite. */
 .palpite-regras {

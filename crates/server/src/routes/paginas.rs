@@ -7,7 +7,8 @@ use axum::extract::State;
 use axum::http::HeaderMap;
 use axum::response::Html;
 use frontend::{
-    AdminTemplate, IndexTemplate, JogoView, PodioView, RankingTemplate, RedeView, RegrasTemplate,
+    AdminTemplate, IndexTemplate, JogoView, PodioView, PrivacidadeTemplate, RankingTemplate,
+    RedeView, RegrasTemplate, TermosTemplate,
 };
 
 fn render<T: Template>(tpl: T) -> Result<Html<String>, AppError> {
@@ -236,6 +237,20 @@ pub async fn regras_page(headers: HeaderMap) -> Result<Html<String>, AppError> {
 /// GET /admin — painel administrativo (login + gestão via JS/fetch).
 pub async fn painel(headers: HeaderMap) -> Result<Html<String>, AppError> {
     render(AdminTemplate {
+        base_url: base_url(&headers),
+    })
+}
+
+/// GET /termos — Termos de Uso.
+pub async fn termos_page(headers: HeaderMap) -> Result<Html<String>, AppError> {
+    render(TermosTemplate {
+        base_url: base_url(&headers),
+    })
+}
+
+/// GET /privacidade — Política de Privacidade.
+pub async fn privacidade_page(headers: HeaderMap) -> Result<Html<String>, AppError> {
+    render(PrivacidadeTemplate {
         base_url: base_url(&headers),
     })
 }

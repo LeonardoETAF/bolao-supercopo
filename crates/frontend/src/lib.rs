@@ -66,6 +66,18 @@ pub struct AdminTemplate {
     pub base_url: String,
 }
 
+#[derive(Template)]
+#[template(path = "termos.html")]
+pub struct TermosTemplate {
+    pub base_url: String,
+}
+
+#[derive(Template)]
+#[template(path = "privacidade.html")]
+pub struct PrivacidadeTemplate {
+    pub base_url: String,
+}
+
 #[cfg(test)]
 mod og_tests {
     use super::*;

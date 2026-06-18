@@ -29,6 +29,8 @@ pub fn montar_app(state: AppState) -> Router {
         .route("/", get(routes::paginas::index))
         .route("/ranking", get(routes::paginas::ranking_page))
         .route("/regras", get(routes::paginas::regras_page))
+        .route("/termos", get(routes::paginas::termos_page))
+        .route("/privacidade", get(routes::paginas::privacidade_page))
         .route("/admin", get(routes::paginas::painel))
         // API pública
         .route("/api/palpite", post(routes::palpites::enviar_palpite))
