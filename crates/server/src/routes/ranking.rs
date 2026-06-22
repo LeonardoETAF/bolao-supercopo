@@ -28,7 +28,8 @@ pub struct Participante {
     pub total_pontos: i64,
     pub total_palpites: i64,
     pub acertos_exatos: i64,
-    /// Placar do palpite mais recente, ex.: "2x1" (ou null se nunca palpitou).
+    /// Palpite mais recente com os países do jogo, ex.: "Brasil 2 x 1 Marrocos"
+    /// (ou null se nunca palpitou).
     pub ultimo_palpite: Option<String>,
 }
 
@@ -75,8 +76,11 @@ pub async fn ranking_completo(
                 COALESCE(SUM(p.pontuacao), 0)::BIGINT                   AS total_pontos,
                 COUNT(p.id)::BIGINT                                     AS total_palpites,
                 COUNT(*) FILTER (WHERE p.pontuacao = 10)::BIGINT        AS acertos_exatos,
-                (SELECT pp.gols_time_a::text || 'x' || pp.gols_time_b::text
-                   FROM palpites pp WHERE pp.usuario_id = u.id
+                (SELECT j.time_a || ' ' || pp.gols_time_a::text || ' x '
+                        || pp.gols_time_b::text || ' ' || j.time_b
+                   FROM palpites pp
+                   JOIN jogos j ON j.id = pp.jogo_id
+                   WHERE pp.usuario_id = u.id
                    ORDER BY pp.criado_em DESC LIMIT 1)                  AS ultimo_palpite,
                 ROW_NUMBER() OVER (
                     ORDER BY

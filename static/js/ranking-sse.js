@@ -20,12 +20,8 @@
   function linha(p, i) {
     var pos = p.posicao != null ? p.posicao : i + 1;
     var classe = pos >= 1 && pos <= 3 ? ' rk-row--' + pos : '';
-    // Mostra qual palpite é (o último é o N-ésimo) na frente do placar: "Palpite 3 - 2x1".
-    var sub = '&nbsp;';
-    if (p.ultimo_palpite) {
-      var numPalpite = p.total_palpites != null ? p.total_palpites : '';
-      sub = 'Palpite ' + escapar(numPalpite) + ' - ' + escapar(p.ultimo_palpite);
-    }
+    // Último palpite com os países do jogo, ex.: "Brasil 2 x 1 Marrocos".
+    var sub = p.ultimo_palpite ? escapar(p.ultimo_palpite) : '&nbsp;';
     var pts = p.total_pontos != null ? p.total_pontos : 0;
 
     return (
