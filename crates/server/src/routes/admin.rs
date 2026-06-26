@@ -530,6 +530,9 @@ fn nome_bandeira(arquivo: &str) -> String {
     if l.contains("scotland") {
         return "Escócia".to_string();
     }
+    if l.contains("japan") {
+        return "Japão".to_string();
+    }
     arquivo
         .trim_start_matches("Flag_of_")
         .trim_start_matches("Flag_")

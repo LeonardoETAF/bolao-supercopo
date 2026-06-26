@@ -47,6 +47,7 @@ fn bandeira(nome: &str) -> Option<String> {
         "marrocos" | "morocco" | "maroc" => "Flag_of_Morocco.svg",
         "haiti" | "haïti" | "haíti" => "Flag_of_Haiti.svg",
         "escócia" | "escocia" | "scotland" => "Flag_of_Scotland.svg",
+        "japão" | "japao" | "japan" => "Flag_of_Japan.svg",
         _ => return None,
     };
     Some(format!("/static/img/{arquivo}"))
